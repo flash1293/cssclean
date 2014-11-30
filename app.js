@@ -19,7 +19,7 @@ var handler = new htmlparser.DomHandler(function (error, parsedHtml) {
   }
   for(var i=0; i < parsedHtml.length; i++) {
     if(parsedHtml[i].type === 'tag') {
-      visitTag(parsedHtml[i], []);
+      visitTag(parsedHtml[i]);
     }
   }
   console.log("used:");
@@ -29,13 +29,12 @@ var handler = new htmlparser.DomHandler(function (error, parsedHtml) {
 });
 
 //handle the node (check css)
-function tagHandler(node, list) {
-  console.log("visit tag " + node.name);
+function tagHandler(node) {
   for(var j=0; j < parsedCss.stylesheet.rules.length; j++) {
     var currentRule = parsedCss.stylesheet.rules[j];
-    if(!currentRule.used) {
+    if(currentRule.selectors && !currentRule.used) {
       for(var i=0; i < currentRule.selectors.length; i++) {
-        if(isAppliable(currentRule.selectors[i], node, list)) {
+        if(isAppliable(currentRule.selectors[i], node)) {
           usedCss.stylesheet.rules.push(currentRule);
           //dont check that rule again
           currentRule.used = true;
@@ -47,37 +46,81 @@ function tagHandler(node, list) {
 }
 
 //traverse all nodes
-function visitTag(node, list) {
-  tagHandler(node, list);
-  var childList = list.slice(0);
-  childList.push(node);
+function visitTag(node) {
+  tagHandler(node);
   for(var i = 0; i < node.children.length; i++) {
     var childNode = node.children[i];
     if(node.children[i].type === 'tag') {
-      visitTag(childNode, childList);
+      visitTag(childNode);
     }
   }
 }
 
 //checks whether a rule is valid for a given node
-function isAppliable(selector, node, parents) {
-  var selectors = selector.split(" ");
-  //cut off classes and stuff (only tag-names are important)
-  for(var i = 0; i < selectors.length; i++) {
-    selectors[i] = selectors[i].split(".")[0];
-  }
-  if(selectors[selectors.length - 1] !== node.name) {
+function isAppliable(selector, node) {
+  var selectors = parseSelector(selector);
+  if(!selectorPartMatches(selectors[selectors.length - 1], node)) {
+    //last tag name must match
     return false;
   }
+  //remove last tag name (target node itself)
   selectors.pop();
+  //reverse direction (start with the most specific)
   selectors.reverse();
-  var chainIsCorrect = true;
-  for(var k = 0; k < parents.length; k++) {
-    if(selectors[0] === parents[k].name) {
+  
+  var currentNode = node;
+  while(currentNode.parent && selectors.length > 0) {
+    currentNode = currentNode.parent;
+    if(selectorPartMatches(selectors[0], currentNode)) {
       selectors.shift();
+    } else if(selectors[0].tag === '>') {
+      //remove >-operator
+      selectors.shift();
+      //check whether next tag in pipe matches
+      if(selectorPartMatches(selectors[0], currentNode)) {
+        //if yes, remove it
+        selectors.shift();
+      } else {
+        //else operator is not fullfilled
+        return false;
+      }
     }
   }
   return selectors.length === 0;
+}
+
+function selectorPartMatches(selectorPart, node) {
+  var tagMatches = (selectorPart.tag === '*'  || selectorPart.tag === node.name);
+  var classMatches = true;
+  //check classes only if selectorpart contains classes
+  if(selectorPart.classes.length > 0) {
+    if(node.attribs.class) {
+      var nodeClasses = node.attribs.class.split(' ');
+      //check if all classes in the selectorpart are available in the node
+      for(var i = 0; i < selectorPart.classes.length; i++) {
+        if(nodeClasses.indexOf(selectorPart.classes[i]) === -1) {
+          classMatches = false;
+        }
+      }
+    } else {
+      //there are classes in the selector-part but no classes in the node
+      classMatches = false;
+    }
+  }
+  return tagMatches && classMatches;
+}
+
+function parseSelector(selector) {
+  var selectors = selector.split(' ');
+  //cut off classes and stuff (only tag-names are important)
+  for(var i = 0; i < selectors.length; i++) {
+    var splittedByDot = selectors[i].split('.');
+    selectors[i] = {
+      tag: (splittedByDot[0] === '' ? '*' : splittedByDot[0]),
+      classes: splittedByDot.slice(1)
+    };
+  }
+  return selectors;
 }
 
 //start parsing

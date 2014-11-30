@@ -25,3 +25,39 @@ div {
 p p a {
   text-align: center;
 }
+
+p > a {
+  text-align: center;
+}
+
+body > p > a span {
+  text-align: center;
+}
+
+body > p > a {
+  text-align: center;
+}
+
+h1 > a {
+  text-align: center;
+}
+
+body > a {
+  text-align: center;
+}
+
+a.rrr {
+  text-align: center;
+}
+
+.rrr {
+  text-align: center;
+}
+
+.nnn {
+  
+}
+
+body.xxx {
+  
+}
