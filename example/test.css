@@ -1,0 +1,27 @@
+h1 {
+  color: red;
+}
+
+a {
+  color: blue;
+}
+
+p a {
+  color: pink;
+}
+
+p a.abc {
+  color: white;
+}
+
+div, p a {
+  text-align: center;
+}
+
+div {
+  text-align: center;
+}
+
+p p a {
+  text-align: center;
+}

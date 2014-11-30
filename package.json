@@ -1,0 +1,25 @@
+{
+  "name": "cssclean",
+  "description": "remove unused css without native dependencies",
+  "version": "0.0.0",
+  "private": true,
+  "author": "Johannes Reuter",
+  "homepage": "www.johannes-reuter.de",
+  "contributors": [
+    "Johannes Reuter <flash1293@gmail.com> (https://github.com/flash1293)"
+  ],
+  "dependencies": {},
+  "devDependencies": {
+    "css": "^2.1.0",
+    "domhandler": "^2.3.0",
+    "htmlparser2": "^3.8.2"
+  },
+  "keywords": [],
+  "repository": "https://github.com/flash1293/cssclean",
+  "licenses": [
+    {
+      "type": "MIT",
+      "url": "http://opensource.org/licenses/MIT"
+    }
+  ]
+}
